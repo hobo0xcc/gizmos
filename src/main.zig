@@ -26,6 +26,7 @@ fn initCpu() void {
     // Enable interrupt
     Riscv.writeCsr("mstatus", Riscv.readCsr("mstatus") | @enumToInt(Riscv.Mstatus.MIE));
     Riscv.writeCsr("mie",     Riscv.readCsr("mie") | @enumToInt(Riscv.Mie.MEIE));
+
     // Set interrupt handler
     const handler_addr = @ptrToInt(@as(*const fn() align(4) callconv(.Naked) noreturn, Interrupt._interrupt));
     Riscv.writeCsr("mtvec", handler_addr);

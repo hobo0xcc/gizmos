@@ -16,90 +16,6 @@ const ExceptionCode = enum(usize) {
     MachineExternalInterrupt = 11,
 };
 
-// refer: https://github.com/mit-pdos/xv6-riscv/blob/7c958af7828973787f3c327854ba71dd3077ad2d/kernel/plic.c#L14-L16
-pub fn initPlic() void {
-    // Set IRQ priorities to non-zero (to enable interrupt)
-    const uart_irq = @intCast(usize, @enumToInt(Irq.Uart0));
-    plicBase()[uart_irq] = 1;
-}
-
-pub fn initPlicForHart() void {
-    const hart = Riscv.cpuId();
-
-    // Enable bits for this hart
-    const m_enable = plicMenableAddr(hart);
-    m_enable.* = 1 << @enumToInt(Irq.Uart0);
-
-    const m_priority = plicMpriorityAddr(hart);
-    m_priority.* = 0;
-}
-
-fn plicBase() [*]volatile u32 {
-    return @intToPtr([*]volatile u32, plic_base_addr);
-}
-
-// refer: https://github.com/mit-pdos/xv6-riscv/blob/7c958af7828973787f3c327854ba71dd3077ad2d/kernel/memlayout.h#L37
-fn plicMenableAddr(hart: usize) *volatile u32 {
-    const base_addr_value = plic_menable_base;
-    return @intToPtr(*volatile u32, base_addr_value + (hart * 0x100));
-}
-
-// refer: https://github.com/mit-pdos/xv6-riscv/blob/7c958af7828973787f3c327854ba71dd3077ad2d/kernel/memlayout.h#L39
-fn plicMpriorityAddr(hart: usize) *volatile u32 {
-    const base_addr_value = plic_mpriority_base;
-    return @intToPtr(*volatile u32, base_addr_value + (hart * 0x2000));
-}
-
-// refer: https://github.com/mit-pdos/xv6-riscv/blob/7c958af7828973787f3c327854ba71dd3077ad2d/kernel/memlayout.h#L41
-fn plicMclaimAddr(hart: usize) *volatile u32 {
-    const base_addr_value = plic_mclaim_base;
-    return @intToPtr(*volatile u32, base_addr_value + (hart * 0x2000));
-}
-
-pub fn plicClaim() Irq {
-    const hart = Riscv.cpuId();
-    const irq = plicMclaimAddr(hart).*;
-    switch (irq) {
-        10 => {},
-        else => {
-            // TODO(hobo0xcc): Panic
-        }
-    }
-    return @intToEnum(Irq, irq & 0xff);
-}
-
-pub fn plicComplete(irq: Irq) void {
-    const hart = Riscv.cpuId();
-    plicMclaimAddr(hart).* = @enumToInt(irq);
-}
-
-pub fn isInterrupt(cause: usize) bool {
-    return (cause & (1 << 63)) != 0;
-}
-
-pub fn isMachineExternalInterrupt(cause: usize) bool {
-    return isInterrupt(cause) and (cause & 0xff) == @enumToInt(ExceptionCode.MachineExternalInterrupt);
-}
-
-pub export fn handleInterrupt() void {
-    const cause = Riscv.readCsr("mcause");
-
-    if (isMachineExternalInterrupt(cause)) {
-        const irq = plicClaim();
-
-        // Handle plic external interrupt
-        switch (irq) {
-            .Uart0 => {
-                Uart.handleInterrupt();
-            }
-        }
-
-        plicComplete(irq);
-    } else {
-        // TODO(hobo0xcc): Handle normal interrupts and exceptions
-    }
-}
-
 // Save registers and jump to handleInterrupt
 pub export fn _interrupt() align(4) callconv(.Naked) noreturn {
     // Save registers
@@ -176,4 +92,89 @@ pub export fn _interrupt() align(4) callconv(.Naked) noreturn {
     );
 
     while (true) {}
+}
+
+pub export fn handleInterrupt() void {
+    const cause = Riscv.readCsr("mcause");
+
+    if (isMachineExternalInterrupt(cause)) {
+        const irq = plicClaim();
+
+        // Handle plic external interrupt
+        switch (irq) {
+            .Uart0 => {
+                Uart.handleInterrupt();
+            }
+        }
+
+        plicComplete(irq);
+    } else {
+        // TODO(hobo0xcc): Handle normal interrupts and exceptions
+    }
+}
+
+pub fn isMachineExternalInterrupt(cause: usize) bool {
+    return isInterrupt(cause) and (cause & 0xff) == @enumToInt(ExceptionCode.MachineExternalInterrupt);
+}
+
+pub fn isInterrupt(cause: usize) bool {
+    return (cause & (1 << 63)) != 0;
+}
+
+
+// refer: https://github.com/mit-pdos/xv6-riscv/blob/7c958af7828973787f3c327854ba71dd3077ad2d/kernel/plic.c#L14-L16
+pub fn initPlic() void {
+    // Set IRQ priorities to non-zero (to enable interrupt)
+    const uart_irq = @intCast(usize, @enumToInt(Irq.Uart0));
+    plicBase()[uart_irq] = 1;
+}
+
+pub fn initPlicForHart() void {
+    const hart = Riscv.cpuId();
+
+    // Enable bits for this hart
+    const m_enable = plicMenableAddr(hart);
+    m_enable.* = 1 << @enumToInt(Irq.Uart0);
+
+    const m_priority = plicMpriorityAddr(hart);
+    m_priority.* = 0;
+}
+
+fn plicBase() [*]volatile u32 {
+    return @intToPtr([*]volatile u32, plic_base_addr);
+}
+
+// refer: https://github.com/mit-pdos/xv6-riscv/blob/7c958af7828973787f3c327854ba71dd3077ad2d/kernel/memlayout.h#L37
+fn plicMenableAddr(hart: usize) *volatile u32 {
+    const base_addr_value = plic_menable_base;
+    return @intToPtr(*volatile u32, base_addr_value + (hart * 0x100));
+}
+
+// refer: https://github.com/mit-pdos/xv6-riscv/blob/7c958af7828973787f3c327854ba71dd3077ad2d/kernel/memlayout.h#L39
+fn plicMpriorityAddr(hart: usize) *volatile u32 {
+    const base_addr_value = plic_mpriority_base;
+    return @intToPtr(*volatile u32, base_addr_value + (hart * 0x2000));
+}
+
+// refer: https://github.com/mit-pdos/xv6-riscv/blob/7c958af7828973787f3c327854ba71dd3077ad2d/kernel/memlayout.h#L41
+fn plicMclaimAddr(hart: usize) *volatile u32 {
+    const base_addr_value = plic_mclaim_base;
+    return @intToPtr(*volatile u32, base_addr_value + (hart * 0x2000));
+}
+
+pub fn plicClaim() Irq {
+    const hart = Riscv.cpuId();
+    const irq = plicMclaimAddr(hart).*;
+    switch (irq) {
+        10 => {},
+        else => {
+            // TODO(hobo0xcc): Panic
+        }
+    }
+    return @intToEnum(Irq, irq & 0xff);
+}
+
+pub fn plicComplete(irq: Irq) void {
+    const hart = Riscv.cpuId();
+    plicMclaimAddr(hart).* = @enumToInt(irq);
 }
