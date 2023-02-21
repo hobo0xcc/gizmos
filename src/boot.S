@@ -1,3 +1,6 @@
+.section .text.first
+.globl _entry
+_entry:
 1:
     la sp, _stack_start
     li a0, 0x1000
@@ -21,3 +24,4 @@
 
     bne a2, a3, 3b // if a2 != a3 go to 3
 4:
+    j main

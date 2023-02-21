@@ -1,4 +1,4 @@
-An WebAssembly-based operating system written in zig
+A WebAssembly-based "macrokernel" operating system
 
 This project is work in progress.
 
@@ -31,7 +31,7 @@ Open another terminal and enter:
 $ gdb -x script.gdb
 ```
 
-You can make some breakpoints here and to start debugging the OS you need to enter `c` on gdb terminal. For example:
+You can make some breakpoints here. To start debugging the OS you need to enter `c` on gdb terminal. For example:
 
 ```
 (gdb) break _entry
@@ -42,3 +42,9 @@ Continuing.
 Breakpoint 1, _entry () at main.zig:6
 6           asm volatile (
 ```
+
+# ToDo
+
+- [x] UART IO
+- [x] Interrupt handler
+- [ ] Wasm runtime

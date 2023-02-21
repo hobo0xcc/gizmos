@@ -12,8 +12,8 @@ SECTIONS
 
     .text : {
         PROVIDE(_text_start = .);
-        *(.entry)
-        *(.text .text.*)
+        KEEP(*(.text.first))
+        *(.text)
         . = ALIGN(0x1000);
         *(.trampoline)
         . = ALIGN(0x1000);
