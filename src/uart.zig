@@ -22,55 +22,55 @@ const LCR_baud_latch: u8 = 0b1000_0000;
 const LCR_eight_bits: u8 = 0b0000_0011;
 const LSR_data_available: u8 = 0b0000_0001;
 
-pub fn uartReadReg(reg_offset: usize) u8 {
+pub fn readReg(reg_offset: usize) u8 {
     return uart_base_addr[reg_offset];
 }
 
-pub fn uartWriteReg(reg_offset: usize, bits: u8) void {
+pub fn writeReg(reg_offset: usize, bits: u8) void {
     uart_base_addr[reg_offset] = bits;
 }
 
-pub fn uartGet() ?u8 {
-    if (uartReadReg(LSR_ro) & LSR_data_available != 0) {
-        return uartReadReg(RBR_ro);
+pub fn get() ?u8 {
+    if (readReg(LSR_ro) & LSR_data_available != 0) {
+        return readReg(RBR_ro);
     } else {
         return null;
     }
 }
 
-pub fn uartWrite(ch: u8) void {
-    uartWriteReg(THR_wo, ch);
+pub fn write(ch: u8) void {
+    writeReg(THR_wo, ch);
 }
 
-pub fn uartHandleInterrupt() void {
+pub fn handleInterrupt() void {
     // refer: https://www.lammertbies.nl/comm/info/serial-uart
     // IIR : Interrupt identification register
-    const IIR = uartReadReg(IIR_ro);
+    const IIR = readReg(IIR_ro);
     _ = IIR;
-    while (uartGet()) |ch| {
-        uartWrite(ch);
+    while (get()) |ch| {
+        write(ch);
     }
 }
 
 // refer: https://github.com/mit-pdos/xv6-riscv/blob/7086197c27f7c00544ca006561336d8d5791a482/kernel/uart.c#L55-L77
-pub fn uartInit() void {
+pub fn init() void {
     // Disable interrupt
-    uartWriteReg(IER_rw, 0x00);   
+    writeReg(IER_rw, 0x00);   
 
     // Set baud rate
     // Make DLL and DLM accessible
-    uartWriteReg(LCR_rw, LCR_baud_latch);
+    writeReg(LCR_rw, LCR_baud_latch);
     // 38,400 bps
-    uartWriteReg(DLL_rw, 0x03);
-    uartWriteReg(DLM_rw, 0x00);
+    writeReg(DLL_rw, 0x03);
+    writeReg(DLM_rw, 0x00);
 
     // Set word length to 8-bits
-    uartWriteReg(LCR_rw, LCR_eight_bits);
+    writeReg(LCR_rw, LCR_eight_bits);
 
     // Reset and enable FIFOs
     // NOTE(hobo0xcc): I don't understand how FIFO works in UART.
-    uartWriteReg(FCR_wo, FCR_enable_fifo | FCR_clear_fifo);
+    writeReg(FCR_wo, FCR_enable_fifo | FCR_clear_fifo);
 
     // Enable transmit and receive interrupts
-    uartWriteReg(IER_rw, IER_receiver_ready | IER_transmitter_empty);
+    writeReg(IER_rw, IER_receiver_ready | IER_transmitter_empty);
 }

@@ -37,10 +37,10 @@ comptime {
 pub export fn main() callconv(.Naked) noreturn {
     initCpu();
 
-    Uart.uartInit();
+    Uart.init();
 
-    Uart.uartWrite('A');
-    Uart.uartWrite('B');
+    Uart.write('A');
+    Uart.write('B');
 
     while (true) {}
 }
@@ -161,7 +161,7 @@ export fn handleInterrupt() void {
         // Handle plic external interrupt
         switch (irq) {
             .Uart0 => {
-                Uart.uartHandleInterrupt();
+                Uart.handleInterrupt();
             }
         }
 
