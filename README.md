@@ -34,18 +34,19 @@ $ gdb -x script.gdb
 You can make some breakpoints here. To start debugging the OS you need to enter `c` on gdb terminal. For example:
 
 ```
-(gdb) break _entry
-Breakpoint 1 at 0x80000000: file main.zig, line 6.
+(gdb) break main
+Breakpoint 1 at 0x8000030a: file main.zig, line 38.
 (gdb) c
 Continuing.
 
-Breakpoint 1, _entry () at main.zig:6
-6           asm volatile (
+Breakpoint 1, main () at main.zig:38
+38          initCpu();
+(gdb) 
 ```
 
 # TODO
 
 - [x] UART IO
 - [x] Interrupt handler
-- [ ] Separate main.zig into some files
+- [x] Separate main.zig into some files
 - [ ] Wasm runtime
