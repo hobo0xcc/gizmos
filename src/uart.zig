@@ -30,7 +30,7 @@ pub fn writeReg(reg_offset: usize, bits: u8) void {
     uart_base_addr[reg_offset] = bits;
 }
 
-pub fn get() ?u8 {
+pub fn readChar() ?u8 {
     if (readReg(LSR_ro) & LSR_data_available != 0) {
         return readReg(RBR_ro);
     } else {
@@ -38,7 +38,7 @@ pub fn get() ?u8 {
     }
 }
 
-pub fn write(ch: u8) void {
+pub fn writeChar(ch: u8) void {
     writeReg(THR_wo, ch);
 }
 
@@ -47,8 +47,8 @@ pub fn handleInterrupt() void {
     // IIR : Interrupt identification register
     const IIR = readReg(IIR_ro);
     _ = IIR;
-    while (get()) |ch| {
-        write(ch);
+    while (readChar()) |ch| {
+        writeChar(ch);
     }
 }
 

@@ -39,8 +39,8 @@ pub export fn main() callconv(.Naked) noreturn {
 
     Uart.init();
 
-    Uart.write('A');
-    Uart.write('B');
+    Uart.writeChar('A');
+    Uart.writeChar('B');
 
     while (true) {}
 }
