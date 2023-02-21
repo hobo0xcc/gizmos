@@ -1,26 +1,4 @@
-// refer: https://www.lammertbies.nl/comm/info/serial-uart
-const RBR_ro: usize = 0; // base + 0, read only (ro)
-const THR_wo: usize = 0; // base + 0, write only (wo)
-const DLL_rw: usize = 0; // base + 0, read write (rw)
-const IER_rw: usize = 1;
-const DLM_rw: usize = 1;
-const IIR_ro: usize = 2;
-const FCR_wo: usize = 2;
-const LCR_rw: usize = 3;
-const MCR_rw: usize = 4;
-const LSR_ro: usize = 5;
-const MSR_ro: usize = 6;
-const SCR_rw: usize = 7;
-
-const IER_receiver_ready: u8 = 0b0000_0001; // Enable bit for the receiver ready interrupt
-const IER_transmitter_empty: u8 = 0b0000_0010;
-const FCR_enable_fifo: u8 = 0b0000_0001;
-const FCR_clear_fifo: u8 = 0b0000_0010;
-const LCR_baud_latch: u8 = 0b1000_0000;
-const LCR_eight_bits: u8 = 0b0000_0011;
-const LSR_data_available: u8 = 0b0000_0001;
-
-const uart_base_addr: [*]volatile u8 = @intToPtr([*]volatile u8, 0x10000000);
+const Uart = @import("uart.zig");
 
 const plic_base_addr: usize = 0x0c000000;
 const plic_priority: usize = plic_base_addr + 0x0;
@@ -59,10 +37,10 @@ comptime {
 pub export fn main() callconv(.Naked) noreturn {
     initCpu();
 
-    uartInit();
+    Uart.uartInit();
 
-    uartWrite('A');
-    uartWrite('B');
+    Uart.uartWrite('A');
+    Uart.uartWrite('B');
 
     while (true) {}
 }
@@ -174,16 +152,6 @@ fn isMachineExternalInterrupt(cause: usize) bool {
     return isInterrupt(cause) and (cause & 0xff) == @enumToInt(ExceptionCode.MachineExternalInterrupt);
 }
 
-fn uartHandleInterrupt() void {
-    // refer: https://www.lammertbies.nl/comm/info/serial-uart
-    // IIR : Interrupt identification register
-    const IIR = uartReadReg(IIR_ro);
-    _ = IIR;
-    while (uartGet()) |ch| {
-        uartWrite(ch);
-    }
-}
-
 export fn handleInterrupt() void {
     const cause = readCsr("mcause");
 
@@ -193,7 +161,7 @@ export fn handleInterrupt() void {
         // Handle plic external interrupt
         switch (irq) {
             .Uart0 => {
-                uartHandleInterrupt();
+                Uart.uartHandleInterrupt();
             }
         }
 
@@ -279,47 +247,4 @@ pub export fn _interrupt() align(4) callconv(.Naked) noreturn {
     );
 
     while (true) {}
-}
-
-fn uartReadReg(reg_offset: usize) u8 {
-    return uart_base_addr[reg_offset];
-}
-
-fn uartWriteReg(reg_offset: usize, bits: u8) void {
-    uart_base_addr[reg_offset] = bits;
-}
-
-fn uartGet() ?u8 {
-    if (uartReadReg(LSR_ro) & LSR_data_available != 0) {
-        return uartReadReg(RBR_ro);
-    } else {
-        return null;
-    }
-}
-
-fn uartWrite(ch: u8) void {
-    uartWriteReg(THR_wo, ch);
-}
-
-// refer: https://github.com/mit-pdos/xv6-riscv/blob/7086197c27f7c00544ca006561336d8d5791a482/kernel/uart.c#L55-L77
-fn uartInit() void {
-    // Disable interrupt
-    uartWriteReg(IER_rw, 0x00);   
-
-    // Set baud rate
-    // Make DLL and DLM accessible
-    uartWriteReg(LCR_rw, LCR_baud_latch);
-    // 38,400 bps
-    uartWriteReg(DLL_rw, 0x03);
-    uartWriteReg(DLM_rw, 0x00);
-
-    // Set word length to 8-bits
-    uartWriteReg(LCR_rw, LCR_eight_bits);
-
-    // Reset and enable FIFOs
-    // NOTE(hobo0xcc): I don't understand how FIFO works in UART.
-    uartWriteReg(FCR_wo, FCR_enable_fifo | FCR_clear_fifo);
-
-    // Enable transmit and receive interrupts
-    uartWriteReg(IER_rw, IER_receiver_ready | IER_transmitter_empty);
 }

@@ -43,8 +43,9 @@ Breakpoint 1, _entry () at main.zig:6
 6           asm volatile (
 ```
 
-# ToDo
+# TODO
 
 - [x] UART IO
 - [x] Interrupt handler
+- [ ] Separate main.zig into some files
 - [ ] Wasm runtime
