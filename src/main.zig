@@ -1,8 +1,8 @@
+const std = @import("std");
 const Riscv = @import("riscv.zig");
+// TODO(hobo0xcc): Bring Uart and Interrupt into riscv.zig
 const Uart = @import("uart.zig");
 const Interrupt = @import("interrupt.zig");
-
-extern fn _stack_end() noreturn;
 
 comptime {
     asm (
@@ -11,15 +11,24 @@ comptime {
     );
 }
 
-pub export fn main() callconv(.Naked) noreturn {
+// Initialize whole system and then call main
+pub export fn start() noreturn {
     initCpu();
-
-    Uart.init();
-
-    Uart.writeChar('A');
-    Uart.writeChar('B');
+    main() catch {
+        // TODO(hobo0xcc): Error handling for main
+        // TODO(hobo0xcc): Exit qemu with error code when error occurred
+    };
 
     while (true) {}
+}
+
+pub fn main() !void {
+    const uart = Uart.init();
+    const writer = uart.writer();
+
+    try writer.print("hello, {} {}\n", .{42, 1729});
+
+    try Riscv.assertStackValidity();
 }
 
 fn initCpu() void {

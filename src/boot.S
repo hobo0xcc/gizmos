@@ -24,4 +24,4 @@ _entry:
 
     bne a2, a3, 3b // if a2 != a3 go to 3
 4:
-    j main
+    j start

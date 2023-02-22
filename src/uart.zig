@@ -1,3 +1,11 @@
+const std = @import("std");
+const io = std.io;
+
+const Self = @This();
+
+const WriteError: type = std.os.WriteError;
+const Writer = io.Writer(Self, WriteError, write);
+
 const uart_base_addr: [*]volatile u8 = @intToPtr([*]volatile u8, 0x10000000);
 
 // refer: https://www.lammertbies.nl/comm/info/serial-uart
@@ -42,6 +50,18 @@ pub fn writeChar(ch: u8) void {
     writeReg(THR_wo, ch);
 }
 
+pub fn write(_: Self, bytes: []const u8) WriteError!usize {
+    for (bytes) |byte| {
+        writeChar(byte);
+    }
+
+    return bytes.len;
+}
+
+pub fn writer(self: Self) Writer {
+    return .{ .context = self };
+}
+
 pub fn handleInterrupt() void {
     // refer: https://www.lammertbies.nl/comm/info/serial-uart
     // IIR : Interrupt identification register
@@ -53,7 +73,7 @@ pub fn handleInterrupt() void {
 }
 
 // refer: https://github.com/mit-pdos/xv6-riscv/blob/7086197c27f7c00544ca006561336d8d5791a482/kernel/uart.c#L55-L77
-pub fn init() void {
+pub fn init() Self {
     // Disable interrupt
     writeReg(IER_rw, 0x00);   
 
@@ -73,4 +93,6 @@ pub fn init() void {
 
     // Enable transmit and receive interrupts
     writeReg(IER_rw, IER_receiver_ready | IER_transmitter_empty);
+
+    return .{};
 }
