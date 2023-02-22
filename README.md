@@ -5,7 +5,9 @@ This project is work in progress.
 # Prerequisites
 
 - Zig master (at least 0.11.0-dev.1602+d976b4e4a)
+    - https://ziglang.org/download/
 - QEMU
+    - https://www.qemu.org/download/
 
 # Building
 
