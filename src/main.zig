@@ -9,7 +9,7 @@ comptime {
 }
 
 // Some initializations and calling main function
-pub export fn start() noreturn {
+pub export fn init() noreturn {
     Riscv.initCpu();
     main() catch {
         // Exit qemu with error code when error occurred

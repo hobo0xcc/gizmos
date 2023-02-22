@@ -62,6 +62,7 @@ pub fn writer() Writer {
     return .{ .context = .{} };
 }
 
+// TODO(hobo0xcc): Add more features
 pub fn handleInterrupt() void {
     // refer: https://www.lammertbies.nl/comm/info/serial-uart
     // IIR : Interrupt identification register

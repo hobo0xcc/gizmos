@@ -52,4 +52,12 @@ Breakpoint 1, main () at main.zig:38
 - [x] Interrupt handler
 - [x] Separate main.zig into some files
 - [x] IO write
+- [ ] Bring Wasm binary from somewhere
+    - VirtIO Block + File System (overkill?)
+    - Embed Wasm binary to source files (easy)
 - [ ] Wasm runtime
+    - I need to read the spec.
+    - Tiny Wasm runtime that only executes some basic operation (add, sub, mul, ret, call, etc.)
+    - Preemption without timer interrupt
+        - Need to get clock counts from somewhere
+        - Maybe just do count executed instructions and switch the running process by these information
