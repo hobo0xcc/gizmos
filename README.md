@@ -49,5 +49,5 @@ Breakpoint 1, main () at main.zig:38
 - [x] UART IO
 - [x] Interrupt handler
 - [x] Separate main.zig into some files
-- [ ] IO write
+- [x] IO write
 - [ ] Wasm runtime

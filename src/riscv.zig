@@ -1,4 +1,5 @@
-const Uart = @import("uart.zig");
+pub const Uart = @import("uart.zig");
+pub const Interrupt = @import("interrupt.zig");
 
 extern fn _stack_end() noreturn;
 extern fn _stack_start() noreturn;
@@ -26,6 +27,26 @@ pub const Mstatus = enum(usize) {
 pub const Mie = enum(usize) {
     MEIE = 0b1 << 11,
 };
+
+pub fn initCpu() void {
+    // Enable interrupt
+    writeCsr("mstatus", readCsr("mstatus") | @enumToInt(Mstatus.MIE));
+    writeCsr("mie",     readCsr("mie") | @enumToInt(Mie.MEIE));
+
+    // Set interrupt handler
+    const handler_addr = @ptrToInt(@as(*const fn() align(4) callconv(.Naked) noreturn, Interrupt._interrupt));
+    writeCsr("mtvec", handler_addr);
+
+    // Set mhartid to tp register for use in cpuid
+    // mhartid is a CPU id that this program is currently running on.
+    const id = readCsr("mhartid");
+    asm volatile ("mv tp, %[id]" :: [id] "r" (id));
+
+    Interrupt.initPlic();
+    // NOTE(hobo0xcc): Currently there's no SMP support
+    // but in the future SMP might be added so this could be changed then.
+    Interrupt.initPlicForHart();
+}
 
 pub fn exit_qemu(exit_status: ExitStatus, exit_code: ?u32) noreturn {
     switch (exit_status) {
