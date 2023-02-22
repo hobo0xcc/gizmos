@@ -15,16 +15,16 @@ comptime {
 pub export fn start() noreturn {
     initCpu();
     main() catch {
-        // TODO(hobo0xcc): Error handling for main
-        // TODO(hobo0xcc): Exit qemu with error code when error occurred
+        // Exit qemu with error code when error occurred
+        Riscv.exit_qemu(Riscv.ExitStatus.Failure, null);
     };
 
     while (true) {}
 }
 
 pub fn main() !void {
-    const uart = Uart.init();
-    const writer = uart.writer();
+    Uart.init();
+    const writer = Uart.writer();
 
     try writer.print("hello, {} {}\n", .{42, 1729});
 

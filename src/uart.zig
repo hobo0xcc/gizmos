@@ -58,8 +58,8 @@ pub fn write(_: Self, bytes: []const u8) WriteError!usize {
     return bytes.len;
 }
 
-pub fn writer(self: Self) Writer {
-    return .{ .context = self };
+pub fn writer() Writer {
+    return .{ .context = .{} };
 }
 
 pub fn handleInterrupt() void {
@@ -73,7 +73,7 @@ pub fn handleInterrupt() void {
 }
 
 // refer: https://github.com/mit-pdos/xv6-riscv/blob/7086197c27f7c00544ca006561336d8d5791a482/kernel/uart.c#L55-L77
-pub fn init() Self {
+pub fn init() void {
     // Disable interrupt
     writeReg(IER_rw, 0x00);   
 
@@ -93,6 +93,4 @@ pub fn init() Self {
 
     // Enable transmit and receive interrupts
     writeReg(IER_rw, IER_receiver_ready | IER_transmitter_empty);
-
-    return .{};
 }

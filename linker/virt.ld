@@ -50,7 +50,7 @@ SECTIONS
         PROVIDE(_bss_end = .);
 
         PROVIDE(_stack_start = .);
-        . = . + 0x2000;
+        . = . + 0x1000;
         PROVIDE(_stack_end = .);
     }
 

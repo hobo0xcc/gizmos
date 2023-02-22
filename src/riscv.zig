@@ -1,5 +1,14 @@
+const Uart = @import("uart.zig");
+
 extern fn _stack_end() noreturn;
 extern fn _stack_start() noreturn;
+
+// refer https://github.com/qemu/qemu/blob/5474aa4f3e0a3e9c171db7c55b5baf15f2e2778c/hw/riscv/virt.c#L78
+const sifive_test: *volatile u32 = @intToPtr(*volatile u32, 0x100000);
+pub const ExitStatus = enum(u32) {
+    Success = 0x5555,
+    Failure = 0x3333,
+};
 
 // NOTE(hobo0xcc): refer boot.S
 const kernel_stack_size: usize = 0x1000 - 0x50; // 4016
@@ -17,6 +26,25 @@ pub const Mstatus = enum(usize) {
 pub const Mie = enum(usize) {
     MEIE = 0b1 << 11,
 };
+
+pub fn exit_qemu(exit_status: ExitStatus, exit_code: ?u32) noreturn {
+    switch (exit_status) {
+        .Success => |status| {
+            sifive_test.* = @enumToInt(status);
+        },
+        .Failure => |status| {
+            if (exit_code) |code| {
+                sifive_test.* = (code << 16) | @enumToInt(status);
+            } else {
+                sifive_test.* = (1 << 16) | @enumToInt(status);
+            }
+        }
+    }
+
+    while (true) {
+        asm volatile ("wfi");
+    }
+}
 
 pub fn assertStackValidity() !void {
     const stack_bottom: usize = @ptrToInt(@as(*const fn() callconv(.C) noreturn, _stack_end)) - kernel_stack_size;
