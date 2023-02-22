@@ -11,9 +11,9 @@ comptime {
 // Some initializations and calling main function
 pub export fn init() noreturn {
     Riscv.initCpu();
-    main() catch {
+    main() catch |e| {
         // Exit qemu with error code when error occurred
-        Riscv.exit_qemu(Riscv.ExitStatus.Failure, null);
+        Riscv.exit_qemu(Riscv.ExitStatus.Failure, @errorToInt(e));
     };
 
     while (true) {}
