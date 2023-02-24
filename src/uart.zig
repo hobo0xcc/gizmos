@@ -76,7 +76,7 @@ pub fn handleInterrupt() void {
 // refer: https://github.com/mit-pdos/xv6-riscv/blob/7086197c27f7c00544ca006561336d8d5791a482/kernel/uart.c#L55-L77
 pub fn init() void {
     // Disable interrupt
-    writeReg(IER_rw, 0x00);   
+    writeReg(IER_rw, 0x00);
 
     // Set baud rate
     // Make DLL and DLM accessible

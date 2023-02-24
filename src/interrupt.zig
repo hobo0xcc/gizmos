@@ -53,9 +53,7 @@ pub export fn _interrupt() align(4) callconv(.Naked) noreturn {
         \\ sd t4, 224(sp)
         \\ sd t5, 232(sp)
         \\ sd t6, 240(sp)
-
         \\ call handleInterrupt
-
         \\ ld ra, 0(sp)
         \\ ld sp, 8(sp)
         \\ ld gp, 16(sp)
@@ -104,7 +102,7 @@ pub export fn handleInterrupt() void {
         switch (irq) {
             .Uart0 => {
                 Uart.handleInterrupt();
-            }
+            },
         }
 
         plicComplete(irq);
@@ -120,7 +118,6 @@ pub fn isMachineExternalInterrupt(cause: usize) bool {
 pub fn isInterrupt(cause: usize) bool {
     return (cause & (1 << 63)) != 0;
 }
-
 
 // refer: https://github.com/mit-pdos/xv6-riscv/blob/7c958af7828973787f3c327854ba71dd3077ad2d/kernel/plic.c#L14-L16
 pub fn initPlic() void {
@@ -169,7 +166,7 @@ pub fn plicClaim() Irq {
         10 => {},
         else => {
             // TODO(hobo0xcc): Panic
-        }
+        },
     }
     return @intToEnum(Irq, irq & 0xff);
 }
