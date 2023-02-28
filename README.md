@@ -1,4 +1,4 @@
-A WebAssembly-based "macrokernel" operating system
+(To be) A WebAssembly-based "macrokernel" operating system
 
 This project is work in progress.
 
