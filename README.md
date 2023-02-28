@@ -52,6 +52,8 @@ Breakpoint 1, main () at main.zig:38
 - [x] Interrupt handler
 - [x] Separate main.zig into some files
 - [x] IO write
+- [x] Testing
+- [ ] Allocator
 - [ ] Bring Wasm binary from somewhere
     - VirtIO Block + File System (overkill?)
     - Embed Wasm binary to source files (easy)

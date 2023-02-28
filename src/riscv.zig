@@ -15,6 +15,8 @@ pub const ExitStatus = enum(u32) {
 const kernel_stack_size: usize = 0x1000 - 0x50; // 4016
 
 pub const RiscvError = error{
+    TestFailed,
+    Panic,
     StackOutOfRange,
 };
 
