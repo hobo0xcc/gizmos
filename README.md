@@ -27,6 +27,12 @@ $ zig build run -Dtarget=riscv64-freestanding -Dboard=virt
 $ zig build debug -Dtarget=riscv64-freestanding -Dboard=virt
 ```
 
+# Testing
+
+```
+$ zig build test -Dtarget=riscv64-freestanding -Dboard=virt
+```
+
 Open another terminal and enter:
 
 ```
