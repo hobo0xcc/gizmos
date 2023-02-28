@@ -5,7 +5,7 @@ const Riscv = @import("riscv.zig");
 
 comptime {
     asm (
-    // _entry here
+        // _entry here
         @embedFile("boot.S")
     );
 }

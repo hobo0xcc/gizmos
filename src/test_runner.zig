@@ -1,5 +1,3 @@
-// Currently there's nothing to do. All zig need to run tests is in main.zig.
-
 const std = @import("std");
 const Riscv = @import("riscv.zig");
 const builtin = @import("builtin");
@@ -32,7 +30,7 @@ pub fn test_runner() !void {
     var skipped: usize = 0;
     var failed: usize = 0;
     var counter: usize = 1;
-    // Simpler main(), exercising fewer language features, so that stage2 can handle it.
+
     for (builtin.test_functions) |test_fn| {
         try writer.print("Test [{}/{}] {s}...\n", .{counter, builtin.test_functions.len, test_fn.name});
 
