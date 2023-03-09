@@ -30,15 +30,10 @@ pub fn build(b: *std.Build) !void {
     try linker_path.appendSlice(board.?);
     try linker_path.appendSlice(".ld");
 
-    const exe = b.addExecutable(.{
-        .name = "gizmos",
-        .root_source_file = .{ .path = "src/main.zig" },
-        .target = target,
-        .optimize = optimize
-    });
+    const exe = b.addExecutable(.{ .name = "gizmos", .root_source_file = .{ .path = "src/main.zig" }, .target = target, .optimize = optimize });
     exe.code_model = .medium;
 
-    exe.setLinkerScriptPath(.{.path = linker_path.items});
+    exe.setLinkerScriptPath(.{ .path = linker_path.items });
     exe.setOutputDir("zig-out/bin");
 
     exe.install();
@@ -47,15 +42,19 @@ pub fn build(b: *std.Build) !void {
     const kernel_binary_path = "zig-out/bin/gizmos";
     var run_emulator_command = std.ArrayList([]const u8).init(b.allocator);
     switch (target.cpu_arch.?) {
-        .riscv64 =>
-            try run_emulator_command.appendSlice(&[_][]const u8 {
+        .riscv64 => try run_emulator_command.appendSlice(&[_][]const u8{
             "qemu-system-riscv64",
-            "-machine", "virt",
-            "-bios", "none",
-            "-m", "256M",
-            "-smp", "1",
-            "-serial", "stdio",
-            // Specify kernel binary after switch
+            "-machine",
+            "virt",
+            "-bios",
+            "none",
+            "-m",
+            "256M",
+            "-smp",
+            "1",
+            "-serial",
+            "stdio",
+            // Specify kernel binary after this switch
             "-kernel",
         }),
         else => std.debug.print("Unknown arch: {}\n", .{target.cpu_arch.?}),
@@ -77,7 +76,7 @@ pub fn build(b: *std.Build) !void {
 
     // Run QEMU in debug mode.
     var debug_run_cmd = b.addSystemCommand(run_emulator_command.items);
-    debug_run_cmd.addArgs(&[_][]const u8 {
+    debug_run_cmd.addArgs(&[_][]const u8{
         "-s", // shorthand for -gdb tcp::1234
         "-S", // freeze CPU at startup
     });
@@ -94,7 +93,7 @@ pub fn build(b: *std.Build) !void {
     });
     test_cmd.setTestRunner("src/test_runner.zig");
     test_cmd.code_model = .medium;
-    test_cmd.setLinkerScriptPath(.{ .path=linker_path.items });
+    test_cmd.setLinkerScriptPath(.{ .path = linker_path.items });
 
     var exec_cmd = std.ArrayList(?[]const u8).init(b.allocator);
     var do_skip_counter: usize = 0;

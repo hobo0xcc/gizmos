@@ -13,7 +13,51 @@ const Irq = enum(u32) {
 };
 
 const ExceptionCode = enum(usize) {
-    MachineExternalInterrupt = 11,
+    // Interrupts
+    const InterruptFlag: usize = 0b1 << 63;
+    SupervisorSoftwareInterrupt = InterruptFlag | 1,
+    MachineSoftwareInterrupt = InterruptFlag | 3,
+    SupervisorTimerInterrupt = InterruptFlag | 5,
+    MachineTimerInterrupt = InterruptFlag | 7,
+    SupervisorExternalInterrupt = InterruptFlag | 9,
+    MachineExternalInterrupt = InterruptFlag | 11,
+
+    InstructionAddressMisaligned = 0,
+    InstructionAccessFault = 1,
+    IllegalInstruction = 2,
+    Breakpoint = 3,
+    LoadAddressMisaligned = 4,
+    LoadAccessFault = 5,
+    StoreAMOAddressMisaligned = 6,
+    StoreAMOAccessFault = 7,
+    EnvironmentCallFromUMode = 8,
+    EnvironmentCallFromSMode = 9,
+    EnvironmentCallFromMMode = 11,
+    InstructionPageFault = 12,
+    LoadPageFault = 13,
+    StoreAMOPageFault = 15,
+
+    Reserved,
+    Undefined,
+
+    const Self = @This();
+
+    pub fn val(self: Self) usize {
+        return @enumToInt(self);
+    }
+
+    pub fn isInterrupt(self: Self) bool {
+        return (self.val() & InterruptFlag) != 0;
+    }
+
+    pub fn isException(self: Self) bool {
+        return !self.isInterrupt();
+    }
+
+    pub fn from(cause: usize) Self {
+        // See RISC-V Previleged Spec Table 3.6: Machine cause register (mcause) values after trap.
+        return @intToEnum(Self, cause);
+    }
 };
 
 // Save registers and jump to handleInterrupt
@@ -94,29 +138,49 @@ pub export fn _interrupt() align(4) callconv(.Naked) noreturn {
 
 pub export fn handleInterrupt() void {
     const cause = Riscv.readCsr("mcause");
+    const exception_code = ExceptionCode.from(cause);
 
-    if (isMachineExternalInterrupt(cause)) {
-        const irq = plicClaim();
+    switch (exception_code) {
+        ExceptionCode.MachineExternalInterrupt => {
+            const irq = plicClaim();
 
-        // Handle plic external interrupt
-        switch (irq) {
-            .Uart0 => {
-                Uart.handleInterrupt();
-            },
-        }
+            // Handle plic external interrupt
+            switch (irq) {
+                .Uart0 => {
+                    Uart.handleInterrupt();
+                },
+            }
 
-        plicComplete(irq);
-    } else {
-        // TODO(hobo0xcc): Handle normal interrupts and exceptions
+            plicComplete(irq);
+        },
+        else => |code| {
+            if (code.isException()) {
+                handleUnrecoverableException(exception_code) catch {};
+            }
+        },
     }
 }
 
-pub fn isMachineExternalInterrupt(cause: usize) bool {
-    return isInterrupt(cause) and (cause & 0xff) == @enumToInt(ExceptionCode.MachineExternalInterrupt);
-}
+pub fn handleUnrecoverableException(code: ExceptionCode) !void {
+    const writer = Riscv.Uart.writer();
+    try writer.print("Unrecoverable Exception occurred !!", .{});
 
-pub fn isInterrupt(cause: usize) bool {
-    return (cause & (1 << 63)) != 0;
+    const mcause = Riscv.readCsr("mcause");
+    const mtvec = Riscv.readCsr("mtvec");
+    const mtval = Riscv.readCsr("mtval");
+    const mepc = Riscv.readCsr("mepc");
+
+    try writer.print("\n{s}\n", .{"-" ** 20});
+
+    try writer.print("ExceptionCode: {}\n", .{code});
+    try writer.print("mcause: 0x{x}\n", .{mcause});
+    try writer.print("mtvec: 0x{x}\n", .{mtvec});
+    try writer.print("mtval: 0x{x}\n", .{mtval});
+    try writer.print("mepc: 0x{x}\n", .{mepc});
+
+    try writer.print("{s}\n", .{"-" ** 20});
+
+    @panic("Unrecoverable Exception");
 }
 
 // refer: https://github.com/mit-pdos/xv6-riscv/blob/7c958af7828973787f3c327854ba71dd3077ad2d/kernel/plic.c#L14-L16
@@ -141,6 +205,7 @@ fn plicBase() [*]volatile u32 {
     return @intToPtr([*]volatile u32, plic_base_addr);
 }
 
+// TODO(hobo0xcc): Refine
 // refer: https://github.com/mit-pdos/xv6-riscv/blob/7c958af7828973787f3c327854ba71dd3077ad2d/kernel/memlayout.h#L37
 fn plicMenableAddr(hart: usize) *volatile u32 {
     const base_addr_value = plic_menable_base;

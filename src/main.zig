@@ -3,11 +3,13 @@ const std = @import("std");
 const root = @import("root");
 const Riscv = @import("riscv.zig");
 
+// Function calling order
+// _entry -> init() -> main()
+
 comptime {
     asm (
-        // _entry here
-        @embedFile("boot.S")
-    );
+    // _entry here
+        @embedFile("boot.S"));
 }
 
 // Some initializations and calling main function

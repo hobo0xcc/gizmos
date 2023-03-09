@@ -9,8 +9,7 @@ pub fn main() !void {
     std.debug.assert(builtin.is_test);
 
     try writer.print("Running tests...\n", .{});
-    try test_runner();
-
+    try testRunner();
 }
 
 pub fn panic(msg: []const u8, trace: ?*std.builtin.StackTrace, ret_addr: ?usize) noreturn {
@@ -24,7 +23,7 @@ pub fn panic(msg: []const u8, trace: ?*std.builtin.StackTrace, ret_addr: ?usize)
     Riscv.exitQemu(Riscv.ExitStatus.Failure, @errorToInt(Riscv.RiscvError.Panic));
 }
 
-pub fn test_runner() !void {
+pub fn testRunner() !void {
     const writer = Riscv.Uart.writer();
 
     var skipped: usize = 0;
@@ -32,7 +31,7 @@ pub fn test_runner() !void {
     var counter: usize = 1;
 
     for (builtin.test_functions) |test_fn| {
-        try writer.print("Test [{}/{}] {s}...\n", .{counter, builtin.test_functions.len, test_fn.name});
+        try writer.print("Test [{}/{}] {s}...\n", .{ counter, builtin.test_functions.len, test_fn.name });
 
         test_fn.func() catch |err| {
             if (err != error.SkipZigTest) {
@@ -44,7 +43,7 @@ pub fn test_runner() !void {
 
         counter += 1;
     }
- 
+
     if (failed == 0) {
         try writer.print("All {d} tests passed.\n", .{builtin.test_functions.len - skipped});
     } else {
