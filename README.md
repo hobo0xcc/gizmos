@@ -1,27 +1,51 @@
-(To be) A WebAssembly-based "macrokernel" operating system
+(To be) A WebAssembly-based operating system
 
 This project is work in progress.
 
 # Prerequisites
 
-- Zig master (at least 0.11.0-dev.1602+d976b4e4a)
+- Zig master (at least 0.11.0-dev.2725+4374ce51b)
     - https://ziglang.org/download/
 - QEMU
     - https://www.qemu.org/download/
 
-# Building
+# Specifying default settings
+
+You can specify default settings in `build.json`. Default settings will then be used by `zig build` to configure build process.
+
+```
+{
+    "target": "riscv64-freestanding",
+    "board": "virt"
+}
+```
+
+```
+# you can omit otherwise required command-line options by using default settings.
+$ zig build run
+```
+
+You can omit these default settings and instead use command-line options to indicate these settings.
+
+Note: If command-line options are used, they will overwrite the default settings in `build.json`.
+
+```
+zig build -Dtarget=riscv64-freestanding -Dboard=virt
+```
+
+# Build
 
 ```
 $ zig build -Dtarget=riscv64-freestanding -Dboard=virt
 ```
 
-# Running
+# Run
 
 ```
 $ zig build run -Dtarget=riscv64-freestanding -Dboard=virt
 ```
 
-# Debugging (with gdb)
+# Debug (with gdb)
 
 ```
 $ zig build debug -Dtarget=riscv64-freestanding -Dboard=virt
@@ -46,26 +70,8 @@ Breakpoint 1, main () at main.zig:38
 (gdb) 
 ```
 
-# Testing
+# Test
 
 ```
 $ zig build test -Dtarget=riscv64-freestanding -Dboard=virt
 ```
-
-# TODO
-
-- [x] UART IO
-- [x] Interrupt handler
-- [x] Separate main.zig into some files
-- [x] IO write
-- [x] Testing
-- [ ] Allocator
-- [ ] Bring Wasm binary from somewhere
-    - VirtIO Block + File System (overkill?)
-    - Embed Wasm binary to source files (easy)
-- [ ] Wasm runtime
-    - I need to read the spec.
-    - Tiny Wasm runtime that only executes some basic operation (add, sub, mul, ret, call, etc.)
-    - Preemption without timer interrupt
-        - Need to get clock counts from somewhere
-        - Maybe just do count executed instructions and switch the running process by these information

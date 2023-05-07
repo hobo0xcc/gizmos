@@ -95,3 +95,8 @@ pub fn init() void {
     // Enable transmit and receive interrupts
     writeReg(IER_rw, IER_receiver_ready | IER_transmitter_empty);
 }
+
+test "uart.Hello" {
+    const w = Self.writer();
+    try w.print("Hello\n", .{});
+}

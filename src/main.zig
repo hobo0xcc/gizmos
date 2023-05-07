@@ -32,8 +32,6 @@ pub fn main() !void {
     const writer = Riscv.Uart.writer();
 
     try writer.print("Welcome to gizmos!\n", .{});
-
-    try Riscv.assertStackValidity();
 }
 
 pub fn panic(msg: []const u8, trace: ?*std.builtin.StackTrace, ret_addr: ?usize) noreturn {
@@ -47,14 +45,16 @@ pub fn panic(msg: []const u8, trace: ?*std.builtin.StackTrace, ret_addr: ?usize)
     Riscv.exitQemu(Riscv.ExitStatus.Failure, @errorToInt(Riscv.RiscvError.Panic));
 }
 
+const testing = std.testing;
+
 test "Hello" {
     const writer = Riscv.Uart.writer();
     try writer.print("Hello\n", .{});
-    std.debug.assert(1 == 1);
+    try testing.expect(1 == 1);
 }
 
 test "Goodbye" {
     const writer = Riscv.Uart.writer();
     try writer.print("Goodbye\n", .{});
-    std.debug.assert(42 == 42);
+    try testing.expect(42 == 42);
 }
