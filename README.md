@@ -11,7 +11,7 @@ This project is work in progress.
 
 # Specifying default settings
 
-You can specify default settings in `build.json`. Default settings will then be used by `zig build` to configure build process.
+You can specify default settings in `build.json`. the default settings will then be used by `zig build` to configure build process.
 
 ```
 {
@@ -27,7 +27,7 @@ $ zig build run
 
 You can omit these default settings and instead use command-line options to indicate these settings.
 
-Note: If command-line options are used, they will overwrite the default settings in `build.json`.
+Note: If command-line options are used, they will override the default settings in `build.json`.
 
 ```
 zig build -Dtarget=riscv64-freestanding -Dboard=virt
