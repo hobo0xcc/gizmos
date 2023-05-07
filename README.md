@@ -11,7 +11,7 @@ This project is work in progress.
 
 # Specifying default settings
 
-You can specify default settings in `build.json`. the default settings will then be used by `zig build` to configure build process.
+You can specify default settings in `build.json`. The default settings will then be used by `zig build` to configure build process.
 
 ```
 {
